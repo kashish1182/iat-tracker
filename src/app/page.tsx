@@ -18,9 +18,9 @@ interface InterviewRow{ interview_date: string; interview_type: string; round: n
 interface BetRow     { job_title: string; company_name: string; status: string; momentum_score: number; interview_rounds: string; contacts: string; }
 
 const STATUS_COLORS: Record<string, string> = {
-  Applied: '#5b9cf6', 'Phone Screen': '#ff9a3c', Interview: '#a78bfa',
-  Offer: '#a3ff6b', Accepted: '#e8ff47', Rejected: '#ff5f5f',
-  Withdrawn: '#9898a8', Wishlist: '#2dd4bf',
+  Applied: '#3a6fc4', 'Phone Screen': '#c07020', Interview: '#7030a0',
+  Offer: '#007000', Accepted: '#808000', Rejected: '#c00000',
+  Withdrawn: '#808080', Wishlist: '#007070',
 };
 
 function badgeClass(s: string) {
@@ -39,10 +39,26 @@ function fmtDate(d: string) {
 
 function DaysUntil({ date }: { date: string }) {
   const days = Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
-  const color = days <= 3 ? 'var(--red)' : days <= 7 ? 'var(--orange)' : 'var(--text2)';
-  return <span style={{ color, fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+  const color = days <= 3 ? '#cc0000' : days <= 7 ? '#cc6600' : '#444444';
+  return <span style={{ color, fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 'bold' }}>
     {days < 0 ? 'Past' : days === 0 ? 'Today' : `${days}d`}
   </span>;
+}
+
+function WinWindow({ icon, title, children }: { icon?: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="win-window">
+      <div className="win-titlebar">
+        <span className="win-titlebar-text">{icon && <span>{icon}</span>}{title}</span>
+        <div className="win-titlebar-btns">
+          <button className="win-btn" aria-label="Minimize">_</button>
+          <button className="win-btn" aria-label="Maximize">□</button>
+          <button className="win-btn" aria-label="Close" style={{ color: '#c00' }}>✕</button>
+        </div>
+      </div>
+      <div className="win-content">{children}</div>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -57,9 +73,11 @@ export default function Dashboard() {
   }, []);
 
   if (!data) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text3)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
-      Loading dashboard…
-    </div>
+    <WinWindow icon="⏳" title="Loading...">
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text2)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+        Please wait while Windows loads your data…
+      </div>
+    </WinWindow>
   );
 
   const { metrics, statusBreakdown, sourceStats, engagementScores, upcomingDeadlines, upcomingInterviews, bestBets } = data;
@@ -68,20 +86,34 @@ export default function Dashboard() {
 
   return (
     <div className="animate-in">
-      <div className="page-header">
-        <h1 className="page-title">Your <em>search</em>, centralized.</h1>
-        <p className="page-subtitle">All applications, interviews, and opportunities at a glance.</p>
+      {/* Title bar header */}
+      <div style={{
+        background: 'linear-gradient(to right, var(--titlebar-start), var(--titlebar-end))',
+        padding: '4px 8px',
+        marginBottom: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        boxShadow: 'var(--raised)',
+      }}>
+        <span style={{ fontSize: '16px' }}>📊</span>
+        <div>
+          <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.85rem' }}>
+            IAT Dashboard — Your <em style={{ fontStyle: 'normal', color: '#ffff99' }}>search</em>, centralized.
+          </div>
+          <div style={{ color: '#cce4ff', fontSize: '0.72rem' }}>All applications, interviews, and opportunities at a glance.</div>
+        </div>
       </div>
 
       {/* Metric Cards */}
       <div className="metric-grid">
         {[
-          { label: 'Total Apps',        value: metrics.total_applications,           sub: 'submitted' },
-          { label: 'Interviews',         value: metrics.apps_with_interviews,         sub: 'reached interview stage' },
-          { label: 'Offers',             value: metrics.offers_received,              sub: 'offers received', accent: true },
-          { label: 'Response Rate',      value: `${metrics.response_rate_pct ?? 0}%`, sub: 'apps → interview' },
-          { label: 'Offer Rate',         value: `${metrics.offer_rate_pct ?? 0}%`,    sub: 'interview → offer' },
-          { label: 'Avg Days to Reply',  value: metrics.avg_days_to_first_interview ?? '—', sub: 'applied → 1st interview' },
+          { label: '📁 Total Apps',        value: metrics.total_applications,           sub: 'submitted', icon: '📁' },
+          { label: '🎤 Interviews',         value: metrics.apps_with_interviews,         sub: 'interview stage' },
+          { label: '🏆 Offers',             value: metrics.offers_received,              sub: 'offers received', accent: true },
+          { label: '📈 Response Rate',      value: `${metrics.response_rate_pct ?? 0}%`, sub: 'apps → interview' },
+          { label: '💰 Offer Rate',         value: `${metrics.offer_rate_pct ?? 0}%`,    sub: 'interview → offer' },
+          { label: '⏱ Avg Days to Reply',  value: metrics.avg_days_to_first_interview ?? '—', sub: '1st interview' },
         ].map(m => (
           <div className="card" key={m.label}>
             <div className="card-label">{m.label}</div>
@@ -91,21 +123,20 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="two-col" style={{ marginBottom: '1.5rem' }}>
+      <div className="two-col" style={{ marginBottom: '8px' }}>
         {/* Status Breakdown */}
-        <div className="card">
-          <div className="section-header">
-            <span className="section-title">Applications by Status</span>
-            <span className="tag">{total} total</span>
+        <WinWindow icon="📊" title="Applications by Status">
+          <div style={{ marginBottom: '4px', fontFamily: 'var(--font-sans)', fontSize: '0.72rem', color: 'var(--text2)' }}>
+            Total: <strong>{total}</strong> applications tracked
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {statusBreakdown.map(row => {
               const pct = total ? Math.round(parseInt(row.count) / total * 100) : 0;
               return (
                 <div key={row.status}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', alignItems: 'center' }}>
                     <span className={badgeClass(row.status)}>{row.status}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text2)' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text)' }}>
                       {row.count} <span style={{ color: 'var(--text3)' }}>({pct}%)</span>
                     </span>
                   </div>
@@ -116,14 +147,11 @@ export default function Dashboard() {
               );
             })}
           </div>
-        </div>
+        </WinWindow>
 
         {/* Source Effectiveness */}
-        <div className="card">
-          <div className="section-header">
-            <span className="section-title">Source Effectiveness</span>
-          </div>
-          <div className="table-wrap" style={{ border: 'none' }}>
+        <WinWindow icon="🔍" title="Source Effectiveness">
+          <div className="table-wrap" style={{ boxShadow: 'none' }}>
             <table>
               <thead><tr>
                 <th>Source</th>
@@ -136,7 +164,7 @@ export default function Dashboard() {
                     <td className="primary">{r.source || 'Unknown'}</td>
                     <td>{r.total_applications}</td>
                     <td>
-                      <span style={{ color: parseFloat(r.interview_rate_pct) > 30 ? 'var(--accent2)' : 'var(--text2)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+                      <span style={{ color: parseFloat(r.interview_rate_pct) > 30 ? '#006600' : 'var(--text2)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 'bold' }}>
                         {r.interview_rate_pct ?? 0}%
                       </span>
                     </td>
@@ -145,113 +173,101 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </WinWindow>
       </div>
 
-      <div className="two-col" style={{ marginBottom: '1.5rem' }}>
+      <div className="two-col" style={{ marginBottom: '8px' }}>
         {/* Upcoming Deadlines */}
-        <div className="card">
-          <div className="section-header">
-            <span className="section-title">⏰ Deadlines (next 14 days)</span>
-          </div>
+        <WinWindow icon="⏰" title="Deadlines — Next 14 Days">
           {upcomingDeadlines.length === 0
             ? <div className="empty">No upcoming deadlines</div>
-            : <div className="table-wrap" style={{ border: 'none' }}>
+            : <div className="table-wrap" style={{ boxShadow: 'none' }}>
                 <table><thead><tr><th>Role</th><th>Company</th><th>Deadline</th><th>In</th></tr></thead>
                   <tbody>{upcomingDeadlines.map((r, i) => (
                     <tr key={i}>
                       <td className="primary" style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</td>
                       <td>{r.company_name}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{fmtDate(r.deadline)}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>{fmtDate(r.deadline)}</td>
                       <td><DaysUntil date={r.deadline} /></td>
                     </tr>
                   ))}</tbody>
                 </table>
               </div>
           }
-        </div>
+        </WinWindow>
 
         {/* Upcoming Interviews */}
-        <div className="card">
-          <div className="section-header">
-            <span className="section-title">📅 Upcoming Interviews</span>
-          </div>
+        <WinWindow icon="📅" title="Upcoming Interviews">
           {upcomingInterviews.length === 0
             ? <div className="empty">No upcoming interviews</div>
-            : <div className="table-wrap" style={{ border: 'none' }}>
+            : <div className="table-wrap" style={{ boxShadow: 'none' }}>
                 <table><thead><tr><th>Role</th><th>Company</th><th>Date</th><th>Type</th></tr></thead>
                   <tbody>{upcomingInterviews.map((r, i) => (
                     <tr key={i}>
                       <td className="primary" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.job_title}</td>
                       <td>{r.company_name}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{fmtDate(r.interview_date)}</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>{fmtDate(r.interview_date)}</td>
                       <td><span className="tag">{r.interview_type}</span></td>
                     </tr>
                   ))}</tbody>
                 </table>
               </div>
           }
-        </div>
+        </WinWindow>
       </div>
 
-      {/* Advanced: Best Bets */}
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="section-header">
-          <span className="section-title">🎯 Best Bets — Momentum Score</span>
-          <span className="tag">Advanced · Predictive</span>
+      {/* Best Bets */}
+      <WinWindow icon="🎯" title="Best Bets — Momentum Score">
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text2)', marginBottom: '8px', padding: '3px 6px', background: '#ffffc0', boxShadow: 'var(--sunken)', borderLeft: '3px solid #cccc00' }}>
+          ℹ Score = source conversion rate × 0.3 + interview rounds × 20 + contacts × 10 + status bonus
         </div>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text3)', marginBottom: '1rem', fontFamily: 'var(--font-mono)' }}>
-          Score = source conversion rate × 0.3 + interview rounds × 20 + contacts × 10 + status bonus
-        </p>
         {bestBets.length === 0
           ? <div className="empty">No active applications to score</div>
-          : <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {bestBets.map((b, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--accent)', width: 28, textAlign: 'right' }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 6px', background: i % 2 === 0 ? 'var(--bg3)' : 'var(--bg2)', boxShadow: 'var(--sunken)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--accent)', width: 24, textAlign: 'right', fontWeight: 'bold' }}>
                     #{i + 1}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem' }}>
-                      <span style={{ fontWeight: 500, color: 'var(--text)' }}>{b.job_title}</span>
-                      <span style={{ color: 'var(--text3)', fontSize: '0.8rem' }}>@ {b.company_name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                      <span style={{ fontWeight: 'bold', color: 'var(--text)', fontSize: '0.8rem' }}>{b.job_title}</span>
+                      <span style={{ color: 'var(--text3)', fontSize: '0.75rem' }}>@ {b.company_name}</span>
                       <span className={badgeClass(b.status)}>{b.status}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text3)', fontFamily: 'var(--font-mono)' }}>
-                      <span>{b.interview_rounds} interviews</span>
-                      <span>{b.contacts} contacts</span>
+                    <div style={{ display: 'flex', gap: '10px', fontSize: '0.72rem', color: 'var(--text2)', fontFamily: 'var(--font-mono)' }}>
+                      <span>Interviews: {b.interview_rounds}</span>
+                      <span>Contacts: {b.contacts}</span>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', minWidth: 80 }}>
-                    <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontSize: '1.1rem' }}>{b.momentum_score}</div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>score</div>
+                  <div style={{ textAlign: 'right', minWidth: 70 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontSize: '1.1rem', fontWeight: 'bold' }}>{b.momentum_score}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text3)', textTransform: 'uppercase' }}>SCORE</div>
                   </div>
                 </div>
               ))}
             </div>
         }
-      </div>
+      </WinWindow>
 
       {/* Company Engagement Scores */}
-      <div className="card">
-        <div className="section-header">
-          <span className="section-title">🏢 Company Engagement Scores</span>
-          <span className="tag">Advanced · SQL Aggregation</span>
+      <WinWindow icon="🏢" title="Company Engagement Scores">
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text2)', marginBottom: '8px', padding: '3px 6px', background: '#ffffc0', boxShadow: 'var(--sunken)', borderLeft: '3px solid #cccc00' }}>
+          ℹ Score = interviews×3 + contacts×2 + offers×5 − rejections
         </div>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text3)', marginBottom: '1rem', fontFamily: 'var(--font-mono)' }}>
-          Score = interviews×3 + contacts×2 + offers×5 − rejections
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {engagementScores.map(r => {
             const pct = maxScore > 0 ? Math.round(r.engagement_score / maxScore * 100) : 0;
             return (
               <div key={r.company_name}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', alignItems: 'center' }}>
                   <div>
-                    <span style={{ color: 'var(--text)', fontWeight: 500 }}>{r.company_name}</span>
-                    <span style={{ color: 'var(--text3)', fontSize: '0.75rem', marginLeft: '0.5rem' }}>{r.application_count} apps · {r.interview_count} interviews · {r.contact_count} contacts</span>
+                    <span style={{ color: 'var(--text)', fontWeight: 'bold', fontSize: '0.8rem' }}>{r.company_name}</span>
+                    <span style={{ color: 'var(--text3)', fontSize: '0.72rem', marginLeft: '8px', fontFamily: 'var(--font-mono)' }}>
+                      {r.application_count} apps · {r.interview_count} interviews · {r.contact_count} contacts
+                    </span>
                   </div>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent)' }}>{r.engagement_score}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 'bold' }}>{r.engagement_score}</span>
                 </div>
                 <div className="score-bar">
                   <div className="score-bar-fill" style={{ width: `${pct}%` }} />
@@ -260,7 +276,9 @@ export default function Dashboard() {
             );
           })}
         </div>
-      </div>
+      </WinWindow>
+
+      <div style={{ height: 12 }} />
     </div>
   );
 }

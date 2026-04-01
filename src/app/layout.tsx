@@ -9,14 +9,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      </head>
+      <head />
       <body>
         <nav className="nav">
-          <a href="/" className="nav-logo">IAT<span>.</span></a>
+          <a href="/" className="nav-logo">IAT</a>
           <div className="nav-links">
             <a href="/" className="nav-link">Dashboard</a>
             <a href="/applications" className="nav-link">Applications</a>
@@ -25,6 +21,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </nav>
         <main className="main">{children}</main>
+        <div className="statusbar">
+          <div className="statusbar-panel">IAT — Internship Application Tracker</div>
+          <div className="statusbar-panel">Ready</div>
+          <div className="statusbar-panel" style={{ marginLeft: 'auto' }}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+          </div>
+        </div>
       </body>
     </html>
   );

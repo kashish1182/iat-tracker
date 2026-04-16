@@ -1,6 +1,6 @@
 # Internship Application Tracker (IAT)
 
-A full-stack web app to organize your entire job/internship search — applications, interviews, contacts, deadlines, and performance analytics — all in one place.
+A full-stack web app to organize your entire job/internship search; applications, interviews, contacts, deadlines, and performance analytics;  all in one place.
 
 **Stack:** Next.js 14 · TypeScript · PostgreSQL (Neon.tech) · Deployed on Vercel
 
